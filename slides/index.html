@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pa4</title>
+    <meta charset="utf-8">
+    <meta name="author" content="Michele Goldin" />
+    <link href="libs/remark-css/default.css" rel="stylesheet" />
+    <link href="libs/remark-css/default-fonts.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Pa4
+## This is getting harder!
+### Michele Goldin
+### 2018/3/1
+
+---
+
+
+
+
+
+```r
+library(untidydata)
+library(xaringan)
+library(plot3D)
+library(tidyverse)
+```
+
+
+```r
+fricatives &lt;- read.csv('../data_raw/fricatives/fricatives.csv', header = TRUE, sep = ',')
+
+str(fricatives)
+```
+
+```
+## 'data.frame':	20 obs. of  5 variables:
+##  $ obs        : int  1 2 3 4 5 6 7 8 9 10 ...
+##  $ s_cog      : num  3285 4664 4680 4874 4879 ...
+##  $ s_skewness : num  -1.22 -1.19 -1.07 -1.06 -1.03 ...
+##  $ sh_cog     : num  2409 2823 2898 3617 3668 ...
+##  $ sh_skewness: num  -0.2481 -0.0165 0.1177 0.1978 0.2118 ...
+```
+
+```r
+head(fricatives)
+```
+
+```
+##   obs    s_cog s_skewness   sh_cog sh_skewness
+## 1   1 3285.300 -1.2152771 2408.519 -0.24808262
+## 2   2 4664.371 -1.1854471 2823.398 -0.01652603
+## 3   3 4679.532 -1.0676233 2898.352  0.11767899
+## 4   4 4873.546 -1.0610645 3617.480  0.19782525
+## 5   5 4878.759 -1.0342092 3668.004  0.21182250
+## 6   6 5194.612 -0.9485275 3684.568  0.26240120
+```
+
+---
+
+#Descriptives
+
+
+```r
+mean(fricatives$s_cog)
+```
+
+```
+## [1] 5690.524
+```
+
+```r
+sd(fricatives$s_cog)
+```
+
+```
+## [1] 913.2537
+```
+
+```r
+mean(fricatives$sh_cog)
+```
+
+```
+## [1] 3994.823
+```
+
+```r
+sd(fricatives$sh_cog)
+```
+
+```
+## [1] 697.0922
+```
+
+```r
+mean(fricatives$s_skewness)
+```
+
+```
+## [1] -0.7714211
+```
+
+```r
+sd(fricatives$s_skewness)
+```
+
+```
+## [1] 0.2834032
+```
+
+```r
+mean(fricatives$sh_skewness)
+```
+
+```
+## [1] 0.5527295
+```
+
+```r
+sd(fricatives$sh_skewness)
+```
+
+```
+## [1] 0.441112
+```
+
+---
+
+#Boxplot cog ~ phoneme
+
+
+```r
+fricatives%&gt;%
+  select('s_cog', 'sh_cog')%&gt;%
+  gather(., key = cog, val = cogvalue)%&gt;%
+  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%&gt;%
+  ggplot(., aes(x=cogvalue, y = phoneme)) +
+  geom_boxplot()
+```
+
+```
+## Warning: position_dodge requires non-overlapping x intervals
+```
+
+![](index_files/figure-html/plot 1-1.png)&lt;!-- --&gt;
+
+---
+
+#Plot skewness ~ phoneme
+
+
+```r
+fricatives%&gt;%
+  select('s_skewness', 'sh_skewness')%&gt;%
+  gather(., key = skewness, val = skewvalue)%&gt;%
+  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%&gt;%
+  ggplot(., aes(x=skewvalue, y = phoneme2)) +
+  geom_point()
+```
+
+![](index_files/figure-html/plot 2-1.png)&lt;!-- --&gt;
+
+---
+
+#Boxplot cog ~ skewness of S
+
+
+```r
+myfrics &lt;- fricatives%&gt;%
+  gather(., 's_cog', 'sh_cog', key = cog, val = cogvalue)%&gt;%
+  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%&gt;%
+  gather(., 's_skewness', 'sh_skewness', key = skewness, val = skewvalue)%&gt;%
+  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%&gt;%
+  filter(., phoneme2 == 's')
+
+myfrics%&gt;%
+  ggplot(., aes(x = cogvalue, y = skewvalue)) +
+  geom_boxplot()
+```
+
+```
+## Warning: Continuous x aesthetic -- did you forget aes(group=...)?
+```
+
+![](index_files/figure-html/plot 3-1.png)&lt;!-- --&gt;
+
+---
+
+#Make a table
+
+##Mean and SD of COG
+
+
+```r
+myfrics %&gt;% 
+  group_by(., cog, skewness) %&gt;% 
+  summarize(., mean_cog = mean(cogvalue), sd_cog = sd(cogvalue)) %&gt;% 
+  knitr::kable(., format = 'html', digits = 2)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; cog &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; skewness &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean_cog &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; sd_cog &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; cog &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; skewness &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4842.67 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1174.88 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+##Mean and SD of Skewness
+
+
+```r
+myfrics %&gt;% 
+  group_by(., skewness) %&gt;% 
+  summarize(., mean_skewness = mean(skewvalue), sd_skewness = sd(skewvalue)) %&gt;% 
+  knitr::kable(., format = 'html', digits = 2)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; skewness &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean_skewness &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; sd_skewness &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; skewness &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.77 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.28 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+---
+
+#Scatterplot
+
+
+```r
+myfrics%&gt;%
+  ggplot(., aes(x = cogvalue, y = skewvalue)) +
+  geom_point()
+```
+
+![](index_files/figure-html/plot 4-1.png)&lt;!-- --&gt;
+
+---
+
+#Model Summary
+
+
+```r
+  my_mod &lt;- lm(cogvalue ~ skewvalue, data = myfrics)
+summary(my_mod)
+```
+
+```
+## 
+## Call:
+## lm(formula = cogvalue ~ skewvalue, data = myfrics)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -1473.0  -780.7  -414.2   927.1  1221.0 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)   6897.9      431.5  15.985  &lt; 2e-16 ***
+## skewvalue     2664.3      526.7   5.059  1.1e-05 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 920.1 on 38 degrees of freedom
+## Multiple R-squared:  0.4024,	Adjusted R-squared:  0.3867 
+## F-statistic: 25.59 on 1 and 38 DF,  p-value: 1.105e-05
+```
+
+---
+
+#Description
+
+The mean cog of phoneme 's' is 5690.524, SD = 913.25 and the mean cog of phoneme 'sh' is 3994.823, SD = 697.09. The mean skewness of phoneme 's' is -0.7714211, SD = 0.28 and the mean skewness of phoneme 'sh' is 0.5527295, SD = 0.44. The scatterplot shows us that center of gravity as a function of 's' skewness. There is a positive correlation, as the center of gravity of both 's' and 'sh' phonemes increases, so does the skewness of 's' (B = 2664.3, SE = 526.7, t value = 5.06, p&lt;.01).
+
+---
+
+#The end
+    </textarea>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function() {
+  var d = document, s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})();</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+  }
+});
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://cdn.bootcss.com/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

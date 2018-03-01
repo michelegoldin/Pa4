@@ -1,0 +1,21 @@
+{
+    "collab_server" : "",
+    "contents" : "devtools::install_github(\"jvcasillas/untidydata\")\ndevtools::install_github(\"yihui/xaringan\")\nlibrary(untidydata)\nlibrary(xaringan)\nlibrary(plot3D)\nlibrary(tidyverse)\n\nfricatives <- read.csv('./data_raw/fricatives/fricatives.csv', header = TRUE, sep = ',')\n\nstr(fricatives)\nhead(fricatives)\n\n#Descriptives\n\nmean(fricatives$s_cog)\nsd(fricatives$s_cog)\nmean(fricatives$sh_cog)\nsd(fricatives$sh_cog)\nmean(fricatives$s_skewness)\nsd(fricatives$s_skewness)\nmean(fricatives$sh_skewness)\nsd(fricatives$sh_skewness)\n\n#Boxplot cog ~ phoneme\n\nfricatives%>%\n  select('s_cog', 'sh_cog')%>%\n  gather(., key = cog, val = cogvalue)%>%\n  separate(., col = cog, into = c('phoneme', 'cog'), sep=\"_\")%>%\n  ggplot(., aes(x=cogvalue, y = phoneme)) +\n  geom_boxplot()\n\n#Plot skewness ~ phoneme\n\nfricatives%>%\n  select('s_skewness', 'sh_skewness')%>%\n  gather(., key = skewness, val = skewvalue)%>%\n  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep=\"_\")%>%\n  ggplot(., aes(x=skewvalue, y = phoneme2)) +\n  geom_point()\n\n#8. Boxplot cog ~ skewness of S\n\nmyfrics <- fricatives%>%\n  gather(., 's_cog', 'sh_cog', key = cog, val = cogvalue)%>%\n  separate(., col = cog, into = c('phoneme', 'cog'), sep=\"_\")%>%\n  gather(., 's_skewness', 'sh_skewness', key = skewness, val = skewvalue)%>%\n  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep=\"_\")%>%\n  filter(., phoneme2 == 's')\n\nmyfrics%>%\n  ggplot(., aes(x = cogvalue, y = skewvalue)) +\n  geom_boxplot()\n\n#Make a table\n\n```{r, table_print}\nmyfrics %>% \n  group_by(., cyl) %>% \n  summarize(., mean_mpg = mean(mpg)) %>% \n  knitr::kable(., format = 'html', digits = 2)\n````\n\n#Scatterplot\n\nmyfrics%>%\n  ggplot(., aes(x = cogvalue, y = skewvalue)) +\n  geom_point()\n\n  my_mod <- lm(cogvalue ~ skewvalue, data = myfrics)\nsummary(my_mod)\n\nhead(myfrics)\n\n  \n#Description\n\n#The mean cog of phoneme 's' is 5690.524, SD = 913.25 and the mean cog of phoneme 'sh' is \n#3994.823, SD = 697.09. The mean skewness of phoneme 's' is -0.7714211, SD = 0.28 and\n#the mean skewness of phoneme 'sh' is 0.5527295, SD = 0.44. The scatterplot shows us that\n#center of gravity as a function of 's' skewness. There is a positive correlation, as the center\n#of gravity of both 's' and 'sh' phonemes increases, so does the skewness of 's' (B = 2664.3, SE = 526.7, t value = 5.06, p<.01)\n\n\n",
+    "created" : 1519766381193.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2930445005",
+    "id" : "80523BFF",
+    "lastKnownWriteTime" : 1519938636,
+    "last_content_update" : 1519938636210,
+    "path" : "~/Desktop/pa4/slides/myscript.R",
+    "project_path" : "slides/myscript.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

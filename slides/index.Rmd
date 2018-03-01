@@ -1,0 +1,152 @@
+---
+title: "Pa4"
+subtitle: "This is getting harder!"
+author: "Michele Goldin"
+date: "2018/3/1"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+```
+
+```{r, load_libraries, message=FALSE, warning=FALSE}
+
+library(untidydata)
+library(xaringan)
+library(plot3D)
+library(tidyverse)
+
+```
+
+```{r, load data and explore}
+fricatives <- read.csv('../data_raw/fricatives/fricatives.csv', header = TRUE, sep = ',')
+
+str(fricatives)
+head(fricatives)
+
+```
+
+---
+
+#Descriptives
+
+```{r, descriptives}
+
+mean(fricatives$s_cog)
+sd(fricatives$s_cog)
+mean(fricatives$sh_cog)
+sd(fricatives$sh_cog)
+mean(fricatives$s_skewness)
+sd(fricatives$s_skewness)
+mean(fricatives$sh_skewness)
+sd(fricatives$sh_skewness)
+```
+
+---
+
+#Boxplot cog ~ phoneme
+
+```{r, plot 1}
+
+fricatives%>%
+  select('s_cog', 'sh_cog')%>%
+  gather(., key = cog, val = cogvalue)%>%
+  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%>%
+  ggplot(., aes(x=cogvalue, y = phoneme)) +
+  geom_boxplot()
+```
+
+---
+
+#Plot skewness ~ phoneme
+
+```{r, plot 2}
+
+fricatives%>%
+  select('s_skewness', 'sh_skewness')%>%
+  gather(., key = skewness, val = skewvalue)%>%
+  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%>%
+  ggplot(., aes(x=skewvalue, y = phoneme2)) +
+  geom_point()
+```
+
+---
+
+#Boxplot cog ~ skewness of S
+
+```{r, plot 3}
+
+myfrics <- fricatives%>%
+  gather(., 's_cog', 'sh_cog', key = cog, val = cogvalue)%>%
+  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%>%
+  gather(., 's_skewness', 'sh_skewness', key = skewness, val = skewvalue)%>%
+  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%>%
+  filter(., phoneme2 == 's')
+
+myfrics%>%
+  ggplot(., aes(x = cogvalue, y = skewvalue)) +
+  geom_boxplot()
+```
+
+---
+
+#Make a table
+
+##Mean and SD of COG
+
+```{r, table_cog}
+myfrics %>% 
+  group_by(., cog, skewness) %>% 
+  summarize(., mean_cog = mean(cogvalue), sd_cog = sd(cogvalue)) %>% 
+  knitr::kable(., format = 'html', digits = 2)
+```
+
+##Mean and SD of Skewness
+
+```{r, table_skewness}
+myfrics %>% 
+  group_by(., skewness) %>% 
+  summarize(., mean_skewness = mean(skewvalue), sd_skewness = sd(skewvalue)) %>% 
+  knitr::kable(., format = 'html', digits = 2)
+
+```
+
+
+---
+
+#Scatterplot
+
+```{r, plot 4}
+
+myfrics%>%
+  ggplot(., aes(x = cogvalue, y = skewvalue)) +
+  geom_point()
+```
+
+---
+
+#Model Summary
+
+```{r, model summary}
+
+  my_mod <- lm(cogvalue ~ skewvalue, data = myfrics)
+summary(my_mod)
+```
+
+---
+
+#Description
+
+The mean cog of phoneme 's' is 5690.524, SD = 913.25 and the mean cog of phoneme 'sh' is 3994.823, SD = 697.09. The mean skewness of phoneme 's' is -0.7714211, SD = 0.28 and the mean skewness of phoneme 'sh' is 0.5527295, SD = 0.44. The scatterplot shows us that center of gravity as a function of 's' skewness. There is a positive correlation, as the center of gravity of both 's' and 'sh' phonemes increases, so does the skewness of 's' (B = 2664.3, SE = 526.7, t value = 5.06, p<.01).
+
+---
+
+#The end
