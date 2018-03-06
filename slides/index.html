@@ -61,6 +61,30 @@ head(fricatives)
 
 ---
 
+#Tidy Data
+
+
+```r
+myfrics &lt;- fricatives %&gt;%
+  gather(., key = measurement, val = value, -obs) %&gt;%
+  separate(., col = measurement, into = c('phoneme', 'measurement'), sep="_") %&gt;%
+  spread(., key = measurement, value = value)
+
+head(myfrics)
+```
+
+```
+##   obs phoneme      cog    skewness
+## 1   1       s 3285.300 -1.21527708
+## 2   1      sh 2408.519 -0.24808262
+## 3   2       s 4664.371 -1.18544712
+## 4   2      sh 2823.398 -0.01652603
+## 5   3       s 4679.532 -1.06762330
+## 6   3      sh 2898.352  0.11767899
+```
+
+---
+
 #Descriptives
 
 
@@ -130,15 +154,54 @@ sd(fricatives$sh_skewness)
 
 ---
 
+#Make a table
+
+##Mean and SD of COG and Skewness
+
+
+```r
+myfrics %&gt;% 
+  group_by(., phoneme) %&gt;% 
+  summarize(., mean_cog = mean(cog), sd_cog = sd(cog), mean_skewness = mean(skewness), sd_skewness = sd(skewness)) %&gt;% 
+  knitr::kable(., format = 'html', digits = 2)
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; phoneme &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean_cog &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; sd_cog &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean_skewness &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; sd_skewness &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; s &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5690.52 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 913.25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; -0.77 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.28 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; sh &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3994.82 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 697.09 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.55 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.44 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+
 #Boxplot cog ~ phoneme
 
 
 ```r
-fricatives%&gt;%
-  select('s_cog', 'sh_cog')%&gt;%
-  gather(., key = cog, val = cogvalue)%&gt;%
-  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%&gt;%
-  ggplot(., aes(x=cogvalue, y = phoneme)) +
+myfrics%&gt;%
+  ggplot(., aes(x=cog, y = phoneme)) +
   geom_boxplot()
 ```
 
@@ -154,11 +217,8 @@ fricatives%&gt;%
 
 
 ```r
-fricatives%&gt;%
-  select('s_skewness', 'sh_skewness')%&gt;%
-  gather(., key = skewness, val = skewvalue)%&gt;%
-  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%&gt;%
-  ggplot(., aes(x=skewvalue, y = phoneme2)) +
+myfrics %&gt;%
+  ggplot(., aes(x=skewness, y = phoneme)) +
   geom_point()
 ```
 
@@ -170,83 +230,13 @@ fricatives%&gt;%
 
 
 ```r
-myfrics &lt;- fricatives%&gt;%
-  gather(., 's_cog', 'sh_cog', key = cog, val = cogvalue)%&gt;%
-  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%&gt;%
-  gather(., 's_skewness', 'sh_skewness', key = skewness, val = skewvalue)%&gt;%
-  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%&gt;%
-  filter(., phoneme2 == 's')
-
 myfrics%&gt;%
-  ggplot(., aes(x = cogvalue, y = skewvalue)) +
-  geom_boxplot()
-```
-
-```
-## Warning: Continuous x aesthetic -- did you forget aes(group=...)?
+  filter(., phoneme == 's')%&gt;%
+  ggplot(., aes(x = cog, y = skewness)) +
+  geom_point()
 ```
 
 ![](index_files/figure-html/plot 3-1.png)&lt;!-- --&gt;
-
----
-
-#Make a table
-
-##Mean and SD of COG
-
-
-```r
-myfrics %&gt;% 
-  group_by(., cog, skewness) %&gt;% 
-  summarize(., mean_cog = mean(cogvalue), sd_cog = sd(cogvalue)) %&gt;% 
-  knitr::kable(., format = 'html', digits = 2)
-```
-
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; cog &lt;/th&gt;
-   &lt;th style="text-align:left;"&gt; skewness &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; mean_cog &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; sd_cog &lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
-&lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; cog &lt;/td&gt;
-   &lt;td style="text-align:left;"&gt; skewness &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 4842.67 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 1174.88 &lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-
-##Mean and SD of Skewness
-
-
-```r
-myfrics %&gt;% 
-  group_by(., skewness) %&gt;% 
-  summarize(., mean_skewness = mean(skewvalue), sd_skewness = sd(skewvalue)) %&gt;% 
-  knitr::kable(., format = 'html', digits = 2)
-```
-
-&lt;table&gt;
- &lt;thead&gt;
-  &lt;tr&gt;
-   &lt;th style="text-align:left;"&gt; skewness &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; mean_skewness &lt;/th&gt;
-   &lt;th style="text-align:right;"&gt; sd_skewness &lt;/th&gt;
-  &lt;/tr&gt;
- &lt;/thead&gt;
-&lt;tbody&gt;
-  &lt;tr&gt;
-   &lt;td style="text-align:left;"&gt; skewness &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; -0.77 &lt;/td&gt;
-   &lt;td style="text-align:right;"&gt; 0.28 &lt;/td&gt;
-  &lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
 
 
 ---
@@ -256,7 +246,7 @@ myfrics %&gt;%
 
 ```r
 myfrics%&gt;%
-  ggplot(., aes(x = cogvalue, y = skewvalue)) +
+  ggplot(., aes(x = cog, y = skewness, color = phoneme)) +
   geom_point()
 ```
 
@@ -268,36 +258,36 @@ myfrics%&gt;%
 
 
 ```r
-  my_mod &lt;- lm(cogvalue ~ skewvalue, data = myfrics)
+  my_mod &lt;- lm(cog ~ skewness, data = myfrics)
 summary(my_mod)
 ```
 
 ```
 ## 
 ## Call:
-## lm(formula = cogvalue ~ skewvalue, data = myfrics)
+## lm(formula = cog ~ skewness, data = myfrics)
 ## 
 ## Residuals:
-##     Min      1Q  Median      3Q     Max 
-## -1473.0  -780.7  -414.2   927.1  1221.0 
+##      Min       1Q   Median       3Q      Max 
+## -2509.70  -618.71    -2.63   838.32  2243.07 
 ## 
 ## Coefficients:
 ##             Estimate Std. Error t value Pr(&gt;|t|)    
-## (Intercept)   6897.9      431.5  15.985  &lt; 2e-16 ***
-## skewvalue     2664.3      526.7   5.059  1.1e-05 ***
+## (Intercept)   4783.1      177.8  26.895   &lt;2e-16 ***
+## skewness      -544.5      233.3  -2.333    0.025 *  
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 920.1 on 38 degrees of freedom
-## Multiple R-squared:  0.4024,	Adjusted R-squared:  0.3867 
-## F-statistic: 25.59 on 1 and 38 DF,  p-value: 1.105e-05
+## Residual standard error: 1113 on 38 degrees of freedom
+## Multiple R-squared:  0.1253,	Adjusted R-squared:  0.1023 
+## F-statistic: 5.445 on 1 and 38 DF,  p-value: 0.02502
 ```
 
 ---
 
 #Description
 
-The mean cog of phoneme 's' is 5690.524, SD = 913.25 and the mean cog of phoneme 'sh' is 3994.823, SD = 697.09. The mean skewness of phoneme 's' is -0.7714211, SD = 0.28 and the mean skewness of phoneme 'sh' is 0.5527295, SD = 0.44. The scatterplot shows us that center of gravity as a function of 's' skewness. There is a positive correlation, as the center of gravity of both 's' and 'sh' phonemes increases, so does the skewness of 's' (B = 2664.3, SE = 526.7, t value = 5.06, p&lt;.01).
+The mean cog of phoneme 's' is 5690.52, SD = 913.25 and the mean cog of phoneme 'sh' is 3994.82, SD = 697.09. The mean skewness of phoneme 's' is -0.77, SD = 0.28 and the mean skewness of phoneme 'sh' is 0.55, SD = 0.44. The first scatterplot shows us the center of gravity as a function of 's' skewness and the second plot shows center of gravity as a function of skewness of both 's' and 'sh' phonemes. There is a positive correlation, as the center of gravity of both 's' and 'sh' phonemes increases, so does the skewness of those phonemes (B = -544.5, SE = 233.3, t value = -2.33, p&lt;.02).
 
 ---
 

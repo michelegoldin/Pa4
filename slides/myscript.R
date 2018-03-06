@@ -10,6 +10,15 @@ fricatives <- read.csv('./data_raw/fricatives/fricatives.csv', header = TRUE, se
 str(fricatives)
 head(fricatives)
 
+#Tidy Data
+
+myfrics <- fricatives %>%
+  gather(., key = measurement, val = value, -obs) %>%
+  separate(., col = measurement, into = c('phoneme', 'measurement'), sep="_") %>%
+  spread(., key = measurement, value = value)
+
+head(myfrics)
+
 #Descriptives
 
 mean(fricatives$s_cog)
@@ -23,14 +32,15 @@ sd(fricatives$sh_skewness)
 
 #Boxplot cog ~ phoneme
 
-fricatives%>%
-  select('s_cog', 'sh_cog')%>%
-  gather(., key = cog, val = cogvalue)%>%
-  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%>%
-  ggplot(., aes(x=cogvalue, y = phoneme)) +
+myfrics%>%
+  ggplot(., aes(x=cog, y = phoneme)) +
   geom_boxplot()
 
 #Plot skewness ~ phoneme
+
+myfrics %>%
+  ggplot(., aes(x=skewness, y = phoneme)) +
+  geom_point()
 
 fricatives%>%
   select('s_skewness', 'sh_skewness')%>%
@@ -41,33 +51,29 @@ fricatives%>%
 
 #8. Boxplot cog ~ skewness of S
 
-myfrics <- fricatives%>%
-  gather(., 's_cog', 'sh_cog', key = cog, val = cogvalue)%>%
-  separate(., col = cog, into = c('phoneme', 'cog'), sep="_")%>%
-  gather(., 's_skewness', 'sh_skewness', key = skewness, val = skewvalue)%>%
-  separate(., col = skewness, into = c('phoneme2', 'skewness'), sep="_")%>%
-  filter(., phoneme2 == 's')
-
 myfrics%>%
-  ggplot(., aes(x = cogvalue, y = skewvalue)) +
-  geom_boxplot()
+  filter(., phoneme == 's')%>%
+  ggplot(., aes(x = cog, y = skewness)) +
+  geom_point()
 
 #Make a table
 
 ```{r, table_print}
+
 myfrics %>% 
-  group_by(., cyl) %>% 
-  summarize(., mean_mpg = mean(mpg)) %>% 
+  group_by(., cog) %>% 
+  summarize(., mean_cog = mean(cog), sd_cog = sd(cog)) %>% 
   knitr::kable(., format = 'html', digits = 2)
+
 ````
 
 #Scatterplot
 
 myfrics%>%
-  ggplot(., aes(x = cogvalue, y = skewvalue)) +
+  ggplot(., aes(x = cog, y = skewness, color = phoneme)) +
   geom_point()
 
-  my_mod <- lm(cogvalue ~ skewvalue, data = myfrics)
+  my_mod <- lm(cog ~ skewness, data = myfrics)
 summary(my_mod)
 
 head(myfrics)
